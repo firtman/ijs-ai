@@ -1,0 +1,148 @@
+
+# API/general
+
+  const body = req.body;
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      temperature: 0.5,
+      messages: [{role: "user", content: body.prompt}],
+    });
+    res.json(completion.choices[0].message.content); 
+  } catch (e) {
+    console.error(`ERROR: ${e.message}`);
+    res.json(`ERROR: ${e.message}`)
+  }
+
+# public/playground/app.js
+
+  const response = await fetch("/api/general", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({prompt})
+    })
+    const output = await response.json();
+    document.querySelector("output").textContent = output;
+
+
+# API/chat
+
+  const body = req.body;
+  const response = await fetch("https://api.openai.com/v1/chat/completions", 
+    {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${OPENAI_KEY}`
+        },
+        body: JSON.stringify(data)
+    })
+    res.json(await response.json())
+
+
+# public/chat/app.js
+
+    // WARNING: We are doing this client-side with a big security risk
+    messages.push({"role": "user", "content": prompt});
+
+    const data = {
+        "model": "gpt-3.5-turbo",
+        "temperature": 0,
+        messages
+      }
+    const response = await fetch("https://api.openai.com/v1/chat/completions", 
+    {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${OPENAI_KEY}`
+        },
+        body: JSON.stringify(data)
+    })
+    const json = await response.json();
+    messages.push(json.choices[0].message);
+    const message = json.choices[0].message.content;
+    document.querySelector("ul").innerHTML += `<li>${message}</li>`
+
+
+# API/image
+
+ const body = req.body;
+
+  const response = await openai.images.generate({
+    prompt: body.prompt,
+    n: 1,
+    model: "dall-e-2",
+    size: "1024x1024",
+  });
+  res.json({url: response.data[0].url})
+
+
+
+# API/recipe
+
+  const body = req.body;
+  const ingredients = body.ingredients;
+  const recipeSample = {
+    
+  } // FILL WITH RECIPE SAMPLE
+  const prompt = `
+     
+  `; // FILL WITH PROMPT
+  const completion = await openai.chat.completions.create({
+    model: "gpt-3.5-turbo",
+    temperature: 0,
+    response_format: {
+      type: "json_object"
+    },  
+    messages: [
+      {role: "system", content: "You are a cooking expert that creates recipes."},
+      {role: "user", content: prompt}
+    ],
+  });
+  res.json(completion.choices[0].message.content);
+
+
+# API/recipe prompt
+
+Create a recipe with the list of ingredients defined within the markup.
+  
+  <ingredients>
+  ${JSON.stringify(ingredients)}
+  </ingredients>
+
+  You can assume typical ingredients found in a kitchen can be used such as salt, pepper, condiments.
+
+  If the list of ingredients is empty of you can't find ingredients inside, just answer with 
+  "false" without any other character in the output or delimiter.
+
+  If you've found a recipe, send the output in JSON valid format with no other characters around
+  as the following sample in ***
+
+  ***
+  ${JSON.stringify(recipeSample)}
+  ***
+
+# API/vision
+
+    const body = req.body;
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4-vision-preview",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "Give me a list of all the ingredients for a cooking recipe you see in this image, in text with a new line \n separator per element. If you can't specify an element, just generalize it or ignore it if not possible." },
+            {
+              type: "image_url",
+              image_url: {
+                "url": `data:image/jpeg;base64,${body.base64_image}` 
+              },
+            },
+          ],
+        },
+      ],
+    });
+    res.send(completion.choices[0].message.content);
